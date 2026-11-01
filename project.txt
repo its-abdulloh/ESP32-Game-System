@@ -1,0 +1,11 @@
+build the parts
+-Display
+-Input Handler
+-add stuff as you need them
+
+make a menu.cpp or Launcher.cpp to choose and laucnh the games
+
+make GameManger.cpp that starts stops switches the game etc.
+
+make games for it like pong,snake,tetris
+

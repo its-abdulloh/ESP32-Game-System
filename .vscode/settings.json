@@ -1,0 +1,4 @@
+{
+    "clangd.checkUpdates": false,
+    "problems.visibility": false
+}
