@@ -18,6 +18,7 @@ void setup() {
   input_init();
   Serial.begin(115200);
   Serial.println("ESP32 STARTED");
+  display.setBusClock(400000);
   display.begin();
   display.clearBuffer();
   display.setFont(u8g2_font_tiny5_tf);
