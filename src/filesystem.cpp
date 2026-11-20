@@ -14,21 +14,21 @@ bool fs_init(){
 }
 
 std::vector<String> fs_list_games(){
-    std::vector<String> games;
+    std::vector<String> gameslist;
     File dir = LittleFS.open("/roms");
     
     if (!dir || !dir.isDirectory()) {
         Serial.println("ROM directory not found");
-        return games;
+        return gameslist;
     }
     File entry = dir.openNextFile();
-    while (entry  && gameCount < MAX_GAMES) {
+    while (entry) {
         if(entry.isDirectory()){
-            games.push_back(String(entry.name()));
+            gameslist.push_back(String(entry.name()));
         }
         entry.close();
         entry = dir.openNextFile();
     }
     dir.close();
-    return games;
+    return gameslist;
 }

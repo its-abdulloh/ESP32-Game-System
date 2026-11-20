@@ -6,9 +6,13 @@
 #include "display.h"
 #include "input.h"
 #include "menu.h"
+#include "filesystem.h"
 #include "flappy.h"
 #include "meow.h"
 
+
+const char* games[] = {"Meow", "Flappy bird","Chip8"};
+int gamesLen = sizeof(games)/sizeof(games[0]);
 // put function declarations here:
 
 void setup() {
@@ -16,6 +20,7 @@ void setup() {
   randomSeed(analogRead(10));
   //initilize buttons
   input_init();
+  fs_init();
   Serial.begin(115200);
   Serial.println("ESP32 STARTED");
   display.setBusClock(400000);
@@ -29,7 +34,7 @@ void setup() {
 }
 
 void loop() {
-  int selected = menu();
+  int selected = menu(games,gamesLen);
   if (selected!=-1){
     if(strcmp(games[selected],"Flappy bird")==0){
       while (1) {
@@ -40,6 +45,9 @@ void loop() {
       while (1) {
         Meow::play();
       }
+    }
+    if (strcmp(games[selected],"Chip8")) {
+    
     }
   }
 
