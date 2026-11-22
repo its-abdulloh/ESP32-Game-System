@@ -3,9 +3,11 @@
 #include <string.h>
 #include <time.h>
 #include <stdbool.h>
+#include <esp_timer.h>
+#include <LittleFS.h>
 #include "chip8instructions.h"
-#include "display.h" //needs doing
-#include "sound.h" //needs doing
+#include "display.h"
+// #include "sound.h" //needs doing
 
 #define MEMORY_SIZE 4*1024
 #define WIDTH 128
@@ -111,18 +113,20 @@ double timerAccumulator = 0.0;
 const double frameTime = 1.0 / 60.0;
 double frameAccumulator = 0.0;
 
-int map_key(); //needs doing
+// int map_key(); //needs doing
 
-void initialize(); //needs doing
+void initialize();
 
 void save_rpl(Chip8 *chip8);
 void load_rpl(Chip8 *chip8);
 
-int LoadROM(char const *filename); //needs doing
+int LoadROM(char const *filename);
 
 void fetch();
 
 void decode_exec();
+
+void draw();
 
 int main_chip8(char *rom_name){
     initialize();
@@ -131,15 +135,12 @@ int main_chip8(char *rom_name){
         return EXIT_FAILURE;
     }
     bool running = true;
-    //needs doing
-    // SDL_Event event;
-    // Uint64 start = SDL_GetPerformanceCounter();
-    // Uint64 frequency = SDL_GetPerformanceFrequency();
+    uint64_t start = esp_timer_get_time();
+    uint64_t frequency = 1000000; // 1 MHz (microseconds)
     while (running){
-        //needs doing
-        // Uint64 now = SDL_GetPerformanceCounter();
-        // double deltaTime = (double)(now - start) / frequency;
-        // start = now;
+        int64_t now = esp_timer_get_time();
+        double deltaTime = (double)(now - start) / 1000000.0;
+        start = now;
         accumulator += deltaTime;
         timerAccumulator += deltaTime;
         frameAccumulator += deltaTime;
@@ -176,22 +177,20 @@ int main_chip8(char *rom_name){
                 chip8.delayTimer--;
             if (chip8.soundTimer>0)
                 chip8.soundTimer--;
-            sound_set_enabled(chip8.soundTimer > 0); //needs doing
+            // sound_set_enabled(chip8.soundTimer > 0); //needs doing
             timerAccumulator -= timerInterval;
         }
 
         if (frameAccumulator >= frameTime) {
             if (chip8.draw_flag) {
-                draw(chip8.video); //needs doing
+                draw(chip8.video);
                 chip8.draw_flag = 0;
             }
 
             frameAccumulator -= frameTime;
         }
-
-        SDL_Delay(1); //needs doing
+        delay(1);
     }
-    display_quit();//needs doing
     return EXIT_SUCCESS;
 }
 
@@ -209,47 +208,38 @@ void initialize(){
 
     load_rpl(&chip8);
     
-    display_init(); //needs doing
-    sound_init(); //needs doing
+    // sound_init(); //needs doing
     return;
 }
 
 int LoadROM(char const *filename){
-    FILE *file = fopen(filename,"rb");
+    File *file = LittleFS.open(filename,"r");
 
-    if (file==NULL){
-        fprintf(stderr,"Failed to open ROM\n");
+    if (!file) {
+        Serial.println("Failed to open ROM");
         return 0;
     }
 
-    if (fseek(file, 0, SEEK_END)!=0){
-        fclose(file);
+    size_t file_size = file.size();
+
+    if (file_size > MEMORY_SIZE - ROM_START) {
+        Serial.println("ROM is too big!");
+        file.close();
         return 0;
     }
 
-    long file_size = ftell(file);
+    size_t bytes_read = file.read(
+        &chip8.memory[ROM_START],
+        file_size
+    );
 
-    if (file_size<0){
-        fclose(file);
+    file.close();
+
+    if (bytes_read != file_size) {
+        Serial.println("Failed to read complete ROM");
         return 0;
     }
 
-    if (file_size>MEMORY_SIZE - ROM_START) {
-        fprintf(stderr,"ROM is too big!\n");
-        fclose(file);
-        return 0;
-    }
-
-    rewind(file);
-    size_t bytes_read = fread(&chip8.memory[ROM_START], 1, (size_t) file_size, file);
-
-    fclose(file);
-
-    if (bytes_read!=(size_t)file_size){
-        fprintf(stderr,"Failed to read complete ROM\n");
-        return 0;
-    }
-    
     chip8.pc = ROM_START;
 
     return 1;
@@ -437,4 +427,21 @@ void load_rpl(Chip8 *chip8) {
     if (count != 16) {
         memset(chip8->rpl_flags, 0, 16);
     }
+}
+
+void draw(uint8_t video[]) {
+    display.clearBuffer();
+
+    for (int y = 0; y < HEIGHT; y++) {
+        for (int x = 0; x < WIDTH; x++) {
+
+            int index = y * WIDTH + x;
+
+            if (video[index] == 1) {
+                display.drawPixel(x, y);
+            }
+        }
+    }
+
+    display.sendBuffer();
 }

@@ -2,6 +2,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#define MEMORY_SIZE 4*1024
+#define WIDTH 128
+#define HEIGHT 64
+
 typedef struct 
 {
     //registers
