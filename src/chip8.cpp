@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -5,6 +6,7 @@
 #include <stdbool.h>
 #include <esp_timer.h>
 #include <LittleFS.h>
+#include "chip8.h"
 #include "chip8instructions.h"
 #include "display.h"
 // #include "sound.h" //needs doing
@@ -117,7 +119,6 @@ double frameAccumulator = 0.0;
 
 void initialize();
 
-void save_rpl(Chip8 *chip8);
 void load_rpl(Chip8 *chip8);
 
 int LoadROM(char const *filename);
@@ -126,7 +127,7 @@ void fetch();
 
 void decode_exec();
 
-void draw();
+void draw(uint8_t video[]);
 
 int main_chip8(const char *rom_name){
     initialize();
@@ -381,57 +382,45 @@ void decode_exec(){
         }
         break;
         case 0xF:
-            switch (kk) {
-                case 0x07:
-                chip8_FX07(&chip8, x);
-                break;
-                case 0x0A:
-                chip8_FX0A(&chip8, x);
-                break;
-                case 0x15:
-                chip8_FX15(&chip8, x);
-                break;
-                case 0x18:
-                chip8_FX18(&chip8, x);
-                break;
-                case 0x1E:
-                chip8_FX1E(&chip8, x);
-                break;
-                case 0x29:
-                chip8_FX29(&chip8, x);
-                break;
-                case 0x30:
-                superchip_FX30(&chip8, x);
-                break;
-                case 0x33:
-                chip8_FX33(&chip8, x);
-                break;
-                case 0x55:
-                chip8_FX55(&chip8, x);
-                break;
-                case 0x65:
-                chip8_FX65(&chip8, x);
-                break;
-                case 0x75:
-                superchip_FX75(&chip8, x);
-                break;
-                case 0x85:
-                superchip_FX85(&chip8, x);
-                break;
-            }
+        switch (kk) {
+            case 0x07:
+            chip8_FX07(&chip8, x);
+            break;
+            case 0x0A:
+            chip8_FX0A(&chip8, x);
+            break;
+            case 0x15:
+            chip8_FX15(&chip8, x);
+            break;
+            case 0x18:
+            chip8_FX18(&chip8, x);
+            break;
+            case 0x1E:
+            chip8_FX1E(&chip8, x);
+            break;
+            case 0x29:
+            chip8_FX29(&chip8, x);
+            break;
+            case 0x30:
+            superchip_FX30(&chip8, x);
+            break;
+            case 0x33:
+            chip8_FX33(&chip8, x);
+            break;
+            case 0x55:
+            chip8_FX55(&chip8, x);
+            break;
+            case 0x65:
+            chip8_FX65(&chip8, x);
+            break;
+            case 0x75:
+            superchip_FX75(&chip8, x);
+            break;
+            case 0x85:
+            superchip_FX85(&chip8, x);
+            break;
         }
-        break;
     }
-}
-
-void save_rpl(Chip8 *chip8) {
-    File file = LittleFS.open("/chip8_rpl.bin", "w");
-
-    if (!file) return;
-
-    file.write(chip8->rpl_flags, 16);
-
-    file.close();
 }
 
 void load_rpl(Chip8 *chip8) {
@@ -449,6 +438,16 @@ void load_rpl(Chip8 *chip8) {
     if (count != 16) {
         memset(chip8->rpl_flags, 0, 16);
     }
+}
+
+void save_rpl(Chip8 *chip8) {
+    File file = LittleFS.open("/chip8_rpl.bin", "w");
+
+    if (!file) return;
+
+    file.write(chip8->rpl_flags, 16);
+
+    file.close();
 }
 
 void draw(uint8_t video[]) {

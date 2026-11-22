@@ -2,6 +2,7 @@
 #include "HardwareSerial.h"
 #include "WString.h"
 #include <vector>
+#include <LittleFS.h>
 
 
 bool fs_init(){

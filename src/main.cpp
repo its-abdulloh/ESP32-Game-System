@@ -9,6 +9,7 @@
 #include "filesystem.h"
 #include "flappy.h"
 #include "meow.h"
+#include "chip8launcher.h"
 
 
 const char* games[] = {"Meow", "Flappy bird","Chip8"};
@@ -47,7 +48,7 @@ void loop() {
       }
     }
     if (strcmp(games[selected],"Chip8")) {
-    
+      menu_chip8();
     }
   }
 

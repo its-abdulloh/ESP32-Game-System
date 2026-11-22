@@ -5,5 +5,5 @@
 extern int selected;
 extern int scroll_offset;
 
-int menu();
-int menu_reset();
+int menu(const char* items[], int count);
+void menu_reset();
