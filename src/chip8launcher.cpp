@@ -14,7 +14,7 @@ void menu_chip8(){
     while (!b_pressed()) {
         int selected = menu(gameslist,gamescount);
         if (selected!=-1){
-            
+            main_chip8(gameslist[selected].c_str());
         }
     }
 }

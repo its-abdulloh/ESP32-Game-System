@@ -128,7 +128,7 @@ void decode_exec();
 
 void draw();
 
-int main_chip8(char *rom_name){
+int main_chip8(const char *rom_name){
     initialize();
     if (!LoadROM(rom_name)) {
         fprintf(stderr, "Failed to load ROM. Exiting.\n");
@@ -212,11 +212,33 @@ void initialize(){
     return;
 }
 
-int LoadROM(char const *filename){
-    File *file = LittleFS.open(filename,"r");
+int LoadROM(char const *rom_name){
+    char filepath[128];
+    snprintf(filepath, sizeof(filepath), "/roms/%s", rom_name);
+    File dir = LittleFS.open(filepath);
+
+    if (!dir || !dir.isDirectory()) {
+        return 0;
+    }
+
+    File file = dir.openNextFile();
+    while (file) {
+        if (!file.isDirectory()) {
+            String filename = file.name();
+
+            if (filename.endsWith(".ch8")) {
+                break;
+            }
+        }
+
+        file.close();
+        file = dir.openNextFile();
+    }
+
+    dir.close();
 
     if (!file) {
-        Serial.println("Failed to open ROM");
+        Serial.println("No .ch8 ROM found");
         return 0;
     }
 
