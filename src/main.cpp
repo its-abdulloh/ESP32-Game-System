@@ -47,8 +47,9 @@ void loop() {
         Meow::play();
       }
     }
-    if (strcmp(games[selected],"Chip8")) {
+    if (strcmp(games[selected],"Chip8")==0) {
       menu_chip8();
+      menu_reset();
     }
   }
 

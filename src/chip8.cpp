@@ -9,6 +9,7 @@
 #include "chip8.h"
 #include "chip8instructions.h"
 #include "display.h"
+#include "input.h"
 // #include "sound.h" //needs doing
 
 #define MEMORY_SIZE 4*1024
@@ -115,7 +116,11 @@ double timerAccumulator = 0.0;
 const double frameTime = 1.0 / 60.0;
 double frameAccumulator = 0.0;
 
-// int map_key(); //needs doing
+int keymap[6]{
+    0x5, 0x9, 0x8, 0x7, 0xE, 0xF
+};
+
+void load_keymap(File config);
 
 void initialize();
 
@@ -145,27 +150,15 @@ int main_chip8(const char *rom_name){
         accumulator += deltaTime;
         timerAccumulator += deltaTime;
         frameAccumulator += deltaTime;
+        
+        memset(chip8.keypad, 0, sizeof(chip8.keypad));
 
-
-        //needs doing
-        //handle keys 
-        // while (SDL_PollEvent(&event)) {
-        //     if (event.type == SDL_QUIT) {
-        //         running = false;
-        //     }
-        //     if (event.type == SDL_KEYDOWN && !event.key.repeat) {
-        //         int key = map_key(event.key.keysym.scancode);
-
-        //         if (key != -1)
-        //             chip8.keypad[key] = 1;
-        //     }
-        //     if (event.type==SDL_KEYUP) {
-        //         int key = map_key(event.key.keysym.scancode);
-
-        //         if (key!=-1)
-        //             chip8.keypad[key]=0;
-        //     }
-        // }
+        if (up_held())    chip8.keypad[keymap[0]] = 1;
+        if (right_held()) chip8.keypad[keymap[1]] = 1;
+        if (down_held())  chip8.keypad[keymap[2]] = 1;
+        if (left_held())  chip8.keypad[keymap[3]] = 1;
+        if (a_held())     chip8.keypad[keymap[4]] = 1;
+        if (b_held())     chip8.keypad[keymap[5]] = 1;
 
         while (accumulator >= instructionTime){
             fetch();
@@ -213,22 +206,50 @@ void initialize(){
     return;
 }
 
-int LoadROM(char const *rom_name){
+int LoadROM(const char* rom_name) {
     char filepath[128];
     snprintf(filepath, sizeof(filepath), "/roms/%s", rom_name);
+
     File dir = LittleFS.open(filepath);
 
     if (!dir || !dir.isDirectory()) {
         return 0;
     }
 
+    bool rom_found = false;
+
     File file = dir.openNextFile();
+
     while (file) {
         if (!file.isDirectory()) {
             String filename = file.name();
 
-            if (filename.endsWith(".ch8")) {
-                break;
+            if (filename.endsWith(".config")) {
+                load_keymap(file);
+            }
+            else if (filename.endsWith(".ch8")) {
+                size_t file_size = file.size();
+
+                if (file_size > MEMORY_SIZE - ROM_START) {
+                    Serial.println("ROM is too big!");
+                    file.close();
+                    dir.close();
+                    return 0;
+                }
+
+                size_t bytes_read = file.read(
+                    &chip8.memory[ROM_START],
+                    file_size
+                );
+
+                if (bytes_read != file_size) {
+                    Serial.println("Failed to read complete ROM");
+                    file.close();
+                    dir.close();
+                    return 0;
+                }
+
+                rom_found = true;
             }
         }
 
@@ -238,34 +259,42 @@ int LoadROM(char const *rom_name){
 
     dir.close();
 
-    if (!file) {
+    if (!rom_found) {
         Serial.println("No .ch8 ROM found");
-        return 0;
-    }
-
-    size_t file_size = file.size();
-
-    if (file_size > MEMORY_SIZE - ROM_START) {
-        Serial.println("ROM is too big!");
-        file.close();
-        return 0;
-    }
-
-    size_t bytes_read = file.read(
-        &chip8.memory[ROM_START],
-        file_size
-    );
-
-    file.close();
-
-    if (bytes_read != file_size) {
-        Serial.println("Failed to read complete ROM");
         return 0;
     }
 
     chip8.pc = ROM_START;
 
     return 1;
+}
+
+void load_keymap(File config) {
+    while (config.available()) {
+        String line = config.readStringUntil('\n');
+        line.trim();
+
+        if (line.startsWith("UP=")) {
+            keymap[0] = strtol(line.substring(3).c_str(), NULL, 16);
+        }
+        else if (line.startsWith("RIGHT=")) {
+            keymap[1] = strtol(line.substring(6).c_str(), NULL, 16);
+        }
+        else if (line.startsWith("DOWN=")) {
+            keymap[2] = strtol(line.substring(5).c_str(), NULL, 16);
+        }
+        else if (line.startsWith("LEFT=")) {
+            keymap[3] = strtol(line.substring(5).c_str(), NULL, 16);
+        }
+        else if (line.startsWith("A=")) {
+            keymap[4] = strtol(line.substring(2).c_str(), NULL, 16);
+        }
+        else if (line.startsWith("B=")) {
+            keymap[5] = strtol(line.substring(2).c_str(), NULL, 16);
+        }
+    }
+
+    config.close();
 }
 
 void fetch(){

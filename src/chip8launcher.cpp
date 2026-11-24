@@ -9,16 +9,18 @@
 
 void menu_chip8(){
     std::vector<String> gameslist = fs_list_games();
-    int gamescount = sizeof(gameslist)/sizeof(gameslist[0]);
     std::vector<const char*> items;
     for (const String& game : gameslist) {
         items.push_back(game.c_str());
     }
     menu_reset();
-    while (!b_pressed()) {
-        int selected = menu(items.data(),gamescount);
+    while (1) {
+        if (b_pressed()) {
+            break;
+        }
+        int selected = menu(items.data(),items.size());
         if (selected!=-1){
-            main_chip8(gameslist[selected].c_str());
+            main_chip8(items[selected]);
         }
     }
 }

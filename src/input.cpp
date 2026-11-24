@@ -1,4 +1,5 @@
 #include "input.h"
+#include <Arduino.h>
 #include "esp32-hal-gpio.h"
 
 #define BUTTON1 25
@@ -83,4 +84,28 @@ bool b_pressed(){
     }
     lastbtnstate6 = btnState;
     return false;
+}
+
+bool up_held() {
+    return digitalRead(BUTTON1) == LOW;
+}
+
+bool right_held() {
+    return digitalRead(BUTTON2) == LOW;
+}
+
+bool down_held() {
+    return digitalRead(BUTTON3) == LOW;
+}
+
+bool left_held() {
+    return digitalRead(BUTTON4) == LOW;
+}
+
+bool a_held() {
+    return digitalRead(BUTTON5) == LOW;
+}
+
+bool b_held() {
+    return digitalRead(BUTTON6) == LOW;
 }
