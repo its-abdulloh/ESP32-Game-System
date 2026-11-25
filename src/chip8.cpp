@@ -10,7 +10,7 @@
 #include "chip8instructions.h"
 #include "display.h"
 #include "input.h"
-// #include "sound.h" //needs doing
+#include "sound.h"
 
 #define MEMORY_SIZE 4*1024
 #define WIDTH 128
@@ -171,7 +171,7 @@ int main_chip8(const char *rom_name){
                 chip8.delayTimer--;
             if (chip8.soundTimer>0)
                 chip8.soundTimer--;
-            // sound_set_enabled(chip8.soundTimer > 0); //needs doing
+            sound_play(chip8.soundTimer); 
             timerAccumulator -= timerInterval;
         }
 
@@ -202,7 +202,7 @@ void initialize(){
 
     load_rpl(&chip8);
     
-    // sound_init(); //needs doing
+    sound_init();
     return;
 }
 
