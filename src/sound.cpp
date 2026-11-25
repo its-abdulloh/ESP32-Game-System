@@ -5,13 +5,14 @@
 const int frequency = 500; 
 
 void sound_init(){
-    ledcAttachPin(BUZZER_PIN,frequency);
+    ledcSetup(0, frequency, 8);
+    ledcAttachPin(BUZZER_PIN, 0);
 }
 
 void sound_play(int soundtimer){
     if (soundtimer > 0) {
-        ledcWriteTone(BUZZER_PIN, frequency);
+        ledcWriteTone(0, frequency);
     } else {
-        ledcWriteTone(BUZZER_PIN, 0);
+        ledcWriteTone(0, 0);
     }
 }
